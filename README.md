@@ -20,7 +20,7 @@ This project is a powerful **local agent** that runs entirely on your machine, u
 Below is a brief demonstration of the web interface in action.
 
 
-**Full Demo Video**: [Link to Your 3-Minute YouTube Video Here]
+**Full Demo Video**: https://youtu.be/lB4BdRKYk-E?si=R_4GR6o_zV6qhtaq
 
 ---
 
@@ -113,7 +113,4 @@ This project is submitted to the **OpenAI Open Model Hackathon** under the follo
 
 ---
 
-## 📄 License
 
-This project is licensed under the **MIT License**.  
-See the LICENSE file for details.
