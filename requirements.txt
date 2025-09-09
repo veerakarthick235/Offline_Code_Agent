@@ -1,0 +1,8 @@
+typer[all]
+rich
+ollama
+chromadb
+tree-sitter==0.21.3
+tree-sitter-languages==1.10.2
+numpy
+flask

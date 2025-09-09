@@ -1,0 +1,19 @@
+# Virtual Environment
+.venv/
+venv/
+*.venv
+
+# Local Database
+chroma_db/
+
+# Downloaded Codebases to Index
+flask/
+django/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# IDE specific files
+.vscode/
+.idea/
