@@ -1,4 +1,4 @@
-LLM_MODEL = "codellama:7b"
+LLM_MODEL = "tinyllama"
 EMBEDDING_MODEL = "nomic-embed-text"
 
 
