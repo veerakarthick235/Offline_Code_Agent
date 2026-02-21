@@ -1,5 +1,3 @@
-# code_indexer.py
-
 import os
 import chromadb
 from tree_sitter import Parser
