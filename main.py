@@ -1,5 +1,3 @@
-# main.py
-
 import typer
 from rich.console import Console
 import os
@@ -33,8 +31,6 @@ def run():
     console.print("[bold green]🚀 Starting the Code Agent web server...[/bold green]")
     console.print("Navigate to [bold blue]http://127.0.0.1:5001[/bold blue] in your browser.")
     
-    # We use subprocess to run Flask so we can manage it from Typer
-    # This is a simple way to integrate them.
     try:
         subprocess.run(["flask", "run", "--port=5001"], check=True)
     except FileNotFoundError:
