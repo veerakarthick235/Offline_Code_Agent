@@ -1,116 +1,147 @@
-# Offline Code Agent 🤖
+# 🤖 Offline Code Agent v2.0
 
-An offline, AI-powered pair programmer that analyzes and answers questions about any codebase. Built for the **OpenAI Open Model Hackathon**.
+**The Privacy-First AI Pair Programmer**
 
-This project is a powerful **local agent** that runs entirely on your machine, using local AI models via **Ollama** to provide deep insights into a codebase without ever needing an internet connection. It's designed to help developers quickly understand, debug, and enhance complex projects.
+------------------------------------------------------------------------
 
----
+## 🌟 The Problem
 
-## 🚀 Features
-- **Offline First**: Works completely without an internet connection after initial setup.
-- **Web-Based UI**: A clean and simple web interface to interact with the agent.
-- **Codebase Q&A**: Ask complex questions about the architecture, functionality, or logic of any indexed codebase.
-- **Agentic Actions**: Automatically generate pytest unit tests for any function or class.
-- **Syntax-Aware Indexing**: Uses **tree-sitter** to intelligently parse code, understanding functions and classes for more accurate context retrieval.
-- **Local AI Powered**: Leverages local LLMs through Ollama, ensuring your code remains private.
+In modern enterprise environments, data privacy is a massive concern.
+Developers often want to use AI tools like ChatGPT, but pasting
+proprietary company code into cloud-based LLMs poses a **critical
+security risk**.
 
----
+------------------------------------------------------------------------
 
-## 🎬 Demo
-Below is a brief demonstration of the web interface in action.
+## 💡 The Solution
 
+**Offline Code Agent** is a full-stack, RAG-powered (Retrieval-Augmented
+Generation) application that runs **100% locally**.\
+It uses a vector database to understand your entire codebase and
+provides an AI assistant that can:
 
-**Full Demo Video**: https://youtu.be/lB4BdRKYk-E?si=R_4GR6o_zV6qhtaq
+-   Answer architectural questions\
+-   Detect bugs and vulnerabilities\
+-   Generate unit tests\
+-   Refactor code intelligently
 
----
+All **without a single byte of data leaving your machine**.
 
-## 🛠️ Setup and Installation
+------------------------------------------------------------------------
 
-Follow these steps to get the **Offline Code Agent** running on your local machine.
+## 🔥 Key Features
 
-### 1. Clone the Repository
-```bash
-git clone [Your GitHub Repository URL]
-cd code-agent
+### 💬 Chat with Memory
+
+Ask high-level questions about your codebase. The agent maintains
+conversational context for natural follow-ups.
+
+### 🪄 Smart Refactor
+
+Automatically improves code readability, structure, and performance
+based on Clean Code principles.
+
+### 🐞 Bug Hunter
+
+Performs static analysis to detect: - Logic errors\
+- Security risks (XSS, Directory Traversal, Injection patterns)\
+- Code smells
+
+### 🧪 Unit Test Generator
+
+Creates robust `pytest` test suites with edge-case coverage, reducing
+manual testing effort.
+
+### ⚡ High Performance
+
+Optimized for local inference using lightweight LLMs such as: - Phi-3\
+- Llama 3\
+- TinyLlama
+
+------------------------------------------------------------------------
+
+## 🛠️ Technical Stack
+
+  Layer          Technology
+  -------------- -----------------------------------
+  Backend        Flask (Python)
+  LLM Runtime    Ollama (Local Models)
+  Vector DB      ChromaDB (Persistent)
+  Code Parsing   Tree-sitter (AST-based)
+  Frontend       HTML5, CSS3, Vanilla JS (Dark UI)
+  Architecture   RAG + Local Inference
+
+------------------------------------------------------------------------
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+-   Python 3.10+
+-   Ollama running locally
+
+------------------------------------------------------------------------
+
+### Installation
+
+#### 1️⃣ Clone the Repository
+
+``` bash
+git clone https://github.com/veerakarthick235/Offline_Code_Agent.git
+cd Offline_Code_Agent
 ```
 
-### 2. Set Up the Environment
+#### 2️⃣ Install Dependencies
 
-**Install Ollama**: Download and install Ollama from [ollama.com](https://ollama.com).
-
-**Download AI Models**: Open your terminal and pull the required models.
-```bash
-# For reasoning and code generation
-ollama pull codellama:13b
-
-# For creating text embeddings
-ollama pull nomic-embed-text
-```
-
-**Create Python Virtual Environment**:
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-# On Windows: .venv\Scripts\activate
-```
-
-**Install Dependencies**:
-```bash
+``` bash
 pip install -r requirements.txt
 ```
 
----
+#### 3️⃣ Index Your Codebase
 
-## 👨‍💻 How to Use
-
-Using the agent is a **two-step process**: first you index a codebase, then you run the web app to ask questions.
-
-### Step 1: Index a Codebase
-You must first "teach" the agent about a codebase. Point it to a local folder containing the source code you want to analyze. This command needs to be run only once per codebase.
-
-```bash
-python main.py index /path/to/your/codebase
+``` bash
+python main.py index "/path/to/your/codebase"
 ```
 
-**Example**:
-```bash
-# Download the Flask codebase
-git clone https://github.com/pallets/flask.git
+#### 4️⃣ Launch the Dashboard
 
-# Index it
-python main.py index ./flask
+``` bash
+python app.py
 ```
 
-### Step 2: Run the Web App
-Once indexing is complete, start the Flask web server.
+Open the UI at:
 
-```bash
-python main.py run
-```
+👉 http://127.0.0.1:5001
 
-Now, open your browser and navigate to:  
-👉 **http://127.0.0.1:5001** to start interacting with your agent.
+------------------------------------------------------------------------
 
----
+## 🔐 Why This Matters
 
-## 🏆 Hackathon Submission
+-   🛡️ **Data Privacy:** Zero cloud dependency\
+-   🏢 **Enterprise Ready:** Safe for proprietary code\
+-   ⚙️ **Developer Productivity:** Faster debugging, refactoring, and
+    testing\
+-   🧠 **AI Engineering Skills:** Demonstrates RAG, local LLMs, AST
+    parsing, and vector search
 
-This project is submitted to the **OpenAI Open Model Hackathon** under the following category:
+------------------------------------------------------------------------
 
-- **Category**: Best Local Agent
-- **Explanation**: This project is a prime example of a useful, agentic application that operates with no internet access. It goes beyond simple Q&A by performing actions like generating unit tests based on its understanding of the code, acting as a true local assistant for developers in secure or offline environments.
+## 👨‍💻 About the Developer
 
----
+**Veera Karthick**\
+3rd-Year B.Tech -- Artificial Intelligence & Data Science\
+Shree Venkateshwara Hi-Tech Engineering College
 
-## 💻 Technology Stack
+I build **privacy-first AI systems** focused on real-world developer
+productivity and secure local inference.
 
-- **Backend**: Python, Flask
-- **AI/LLM**: Ollama (codellama:13b, nomic-embed-text)
-- **Vector Database**: ChromaDB
-- **Code Parsing**: py-tree-sitter
-- **Frontend**: HTML, CSS, JavaScript
-- **CLI**: Typer
+-   🌐 Portfolio: https://veerakarthick.in/\
+-   💻 GitHub: https://github.com/veerakarthick235\
+-   🔗 LinkedIn: https://www.linkedin.com/in/karthickkumar-s-b04a10348/
 
----
+------------------------------------------------------------------------
 
+## 📄 License
 
+Distributed under the **MIT License**.\
+See `LICENSE` for more information.
