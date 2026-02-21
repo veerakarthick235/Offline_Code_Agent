@@ -1,103 +1,123 @@
-# rag_agent.py
-
 import chromadb
 import ollama
-from typing import List, Generator
+from typing import List, Generator, Dict
 
 from config import DB_PATH, DB_COLLECTION_NAME, EMBEDDING_MODEL, LLM_MODEL
 
 class RAGAgent:
-    """
-    An agent that uses Retrieval-Augmented Generation to answer questions about a codebase.
-    """
     def __init__(self):
         self.client = chromadb.PersistentClient(path=DB_PATH)
-        self.collection = self.client.get_collection(name=DB_COLLECTION_NAME)
+        self.collection = self.client.get_or_create_collection(name=DB_COLLECTION_NAME)
+        self.history: List[Dict[str, str]] = [] # Conversational Memory
 
     def _retrieve_context(self, query: str, n_results: int = 5) -> List[str]:
         """Retrieves relevant code chunks from the database."""
-        query_embedding = ollama.embeddings(
-            model=EMBEDDING_MODEL,
-            prompt=query
-        )["embedding"]
+        try:
+            query_embedding = ollama.embeddings(
+                model=EMBEDDING_MODEL,
+                prompt=query
+            )["embedding"]
 
-        results = self.collection.query(
-            query_embeddings=[query_embedding],
-            n_results=n_results
-        )
-        return results["documents"][0]
+            results = self.collection.query(
+                query_embeddings=[query_embedding],
+                n_results=n_results
+            )
+            
+            if not results["documents"] or not results["documents"][0]:
+                return []
+                
+            return results["documents"][0]
+        except Exception as e:
+            print(f"Error retrieving context: {e}")
+            return []
 
-    def _generate_streaming_response(self, prompt: str) -> Generator[str, None, None]:
-        """Generates a streaming response from the LLM."""
+    def _generate_streaming_response(self, prompt: str, save_to_history: bool = True) -> Generator[str, None, None]:
+        """Generates a streaming response and updates history."""
+        messages = self.history + [{'role': 'user', 'content': prompt}]
+        
+        # Keep history manageable (last 10 messages)
+        if len(messages) > 10:
+            messages = messages[-10:]
+
         response = ollama.chat(
             model=LLM_MODEL,
-            messages=[{'role': 'user', 'content': prompt}],
+            messages=messages,
             stream=True
         )
         
+        full_response = ""
         for chunk in response:
-            yield chunk['message']['content']
+            content = chunk['message']['content']
+            full_response += content
+            yield content
+            
+        if save_to_history:
+            self.history.append({'role': 'user', 'content': prompt})
+            self.history.append({'role': 'assistant', 'content': full_response})
 
-    def stream_ask(self, query: str) -> Generator[str, None, None]:
-        """Handles a general query and streams the response."""
-        print(f"🧠 Thinking about: {query}")
+    def stream_chat(self, query: str) -> Generator[str, None, None]:
+        """General Q&A with memory."""
         context = self._retrieve_context(query)
+        context_str = "\n\n---\n\n".join(context) if context else "No specific code found."
         
-        prompt_template = """
-        You are an expert pair programmer and software architect.
-        Your task is to answer a question about a codebase using the provided context.
-        Be concise, accurate, and provide code examples when helpful. Format your response using Markdown.
-
-        Here is the relevant context from the codebase:
-        ---
-        {context}
-        ---
-
-        Here is the user's question:
-        "{query}"
-
-        Your answer:
+        prompt = f"""
+        You are an expert pair programmer. Use the context below to answer the user's question.
+        If the context isn't relevant, answer based on your general knowledge but mention that.
+        
+        Context from codebase:
+        {context_str}
+        
+        User Question: {query}
         """
-        prompt = prompt_template.format(query=query, context="\n\n---\n\n".join(context))
         yield from self._generate_streaming_response(prompt)
 
+    def stream_refactor(self, identifier: str) -> Generator[str, None, None]:
+        """Agentic Skill: Refactor Code."""
+        context = self._retrieve_context(f"source code for {identifier}", n_results=1)
+        code_snippet = context[0] if context else "Code not found."
+        
+        prompt = f"""
+        TASK: Refactor the following code to improve readability, performance, and adherence to clean code principles.
+        Explain your changes briefly at the end.
+        
+        CODE TO REFACTOR:
+        ```
+        {code_snippet}
+        ```
+        """
+        # We don't save specialized tasks to general chat history to keep context clean
+        yield from self._generate_streaming_response(prompt, save_to_history=False)
+
+    def stream_bug_hunt(self, identifier: str) -> Generator[str, None, None]:
+        """Agentic Skill: Bug Hunter."""
+        context = self._retrieve_context(f"source code for {identifier}", n_results=1)
+        code_snippet = context[0] if context else "Code not found."
+        
+        prompt = f"""
+        TASK: Analyze the following code for potential bugs, security vulnerabilities, or logic errors.
+        If no bugs are found, suggest defensive coding improvements.
+        
+        CODE TO ANALYZE:
+        ```
+        {code_snippet}
+        ```
+        """
+        yield from self._generate_streaming_response(prompt, save_to_history=False)
+    
     def stream_write_test(self, identifier: str) -> Generator[str, None, None]:
-        """Generates a unit test for a specific function or class and streams the response."""
-        print(f"🧪 Writing a test for: {identifier}")
-        context = self._retrieve_context(f"the source code for the function or class named {identifier}", n_results=3)
+        """Agentic Skill: Write Unit Test."""
+        context = self._retrieve_context(f"source code for {identifier}", n_results=1)
+        code_snippet = context[0] if context else "Code not found."
 
-        prompt_template = """
-        You are an expert software developer specializing in testing.
-        Your task is to write a simple, effective unit test for the provided code snippet using the pytest framework.
-        The test should be self-contained in a single code block. Explain your test briefly after the code.
-
-        Here is the source code to test:
-        ---
-        {context}
-        ---
-
-        Write a pytest unit test for the function or class '{identifier}'.
-
-        Your response:
+        prompt = f"""
+        TASK: Write a robust pytest unit test for this code. Cover edge cases if possible.
+        
+        CODE:
+        ```
+        {code_snippet}
+        ```
         """
-        prompt = prompt_template.format(identifier=identifier, context="\n\n---\n\n".join(context))
-        yield from self._generate_streaming_response(prompt)
-
-    # --- Keep the old methods for CLI use if desired ---
-    def ask(self, query: str):
-        """Non-streaming version for CLI."""
-        full_response = ""
-        for chunk in self.stream_ask(query):
-            print(chunk, end='', flush=True)
-            full_response += chunk
-        print()
-        return full_response
-
-    def write_test(self, identifier: str):
-        """Non-streaming version for CLI."""
-        full_response = ""
-        for chunk in self.stream_write_test(identifier):
-            print(chunk, end='', flush=True)
-            full_response += chunk
-        print()
-        return full_response
+        yield from self._generate_streaming_response(prompt, save_to_history=False)
+    
+    def clear_history(self):
+        self.history = []
