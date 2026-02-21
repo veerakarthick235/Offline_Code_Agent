@@ -86,8 +86,6 @@ class CodeIndexer:
                     chunks = self._extract_chunks(code, parser, language)
                     
                     for chunk in chunks:
-                        # --- THIS IS THE FIX ---
-                        # Ensure the content is not empty or just whitespace before adding
                         if chunk["content"] and not chunk["content"].isspace():
                             documents.append(chunk["content"])
                             metadatas.append({
@@ -107,11 +105,8 @@ class CodeIndexer:
 
         print(f"Found {len(documents)} code chunks. Generating embeddings...")
         
-        # This part has a list comprehension that can be slow for large numbers of documents.
-        # We'll generate embeddings one by one to show progress.
         embeddings = []
         for i, doc in enumerate(documents):
-            # Print progress every 50 documents
             if (i + 1) % 50 == 0:
                 print(f"  - Embedding document {i+1}/{len(documents)}")
             embedding = ollama.embeddings(model=EMBEDDING_MODEL, prompt=doc)["embedding"]
@@ -126,3 +121,4 @@ class CodeIndexer:
         )
         print("✅ Indexing complete!")
         
+
