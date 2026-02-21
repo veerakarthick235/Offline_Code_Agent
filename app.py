@@ -1,6 +1,4 @@
-# app.py
-
-from flask import Flask, render_template, request, Response
+from flask import Flask, render_template, request, Response, jsonify
 from rag_agent import RAGAgent
 import json
 
@@ -9,39 +7,37 @@ agent = RAGAgent()
 
 @app.route('/')
 def index():
-    """Renders the main page."""
     return render_template('index.html')
+
+def stream_helper(generator):
+    """Helper to stream data to the client."""
+    for chunk in generator:
+        yield f"data: {json.dumps({'content': chunk})}\n\n"
 
 @app.route('/ask', methods=['POST'])
 def ask():
-    """Handles the 'ask' action from the UI."""
     data = request.json
-    query = data.get('query')
-    if not query:
-        return Response(json.dumps({'error': 'Query cannot be empty.'}), status=400, mimetype='application/json')
+    return Response(stream_helper(agent.stream_chat(data.get('query'))), mimetype='text/event-stream')
 
-    def stream():
-        for chunk in agent.stream_ask(query):
-            # SSE format: "data: {json_string}\n\n"
-            yield f"data: {json.dumps({'content': chunk})}\n\n"
-    
-    return Response(stream(), mimetype='text/event-stream')
+@app.route('/refactor', methods=['POST'])
+def refactor():
+    data = request.json
+    return Response(stream_helper(agent.stream_refactor(data.get('identifier'))), mimetype='text/event-stream')
+
+@app.route('/bughunt', methods=['POST'])
+def bughunt():
+    data = request.json
+    return Response(stream_helper(agent.stream_bug_hunt(data.get('identifier'))), mimetype='text/event-stream')
 
 @app.route('/test', methods=['POST'])
 def test():
-    """Handles the 'write_test' action from the UI."""
     data = request.json
-    identifier = data.get('identifier')
-    if not identifier:
-        return Response(json.dumps({'error': 'Identifier cannot be empty.'}), status=400, mimetype='application/json')
+    return Response(stream_helper(agent.stream_write_test(data.get('identifier'))), mimetype='text/event-stream')
 
-    def stream():
-        for chunk in agent.stream_write_test(identifier):
-            # SSE format: "data: {json_string}\n\n"
-            yield f"data: {json.dumps({'content': chunk})}\n\n"
-
-    return Response(stream(), mimetype='text/event-stream')
+@app.route('/clear', methods=['POST'])
+def clear():
+    agent.clear_history()
+    return jsonify({"status": "success"})
 
 if __name__ == '__main__':
-    # Note: The 'main.py' file's 'run' command will execute this.
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5001, use_reloader=False)
